@@ -45,14 +45,19 @@ namespace LockWorkStationService
 
 		private void Receive()
 		{
-			while (true)
+			var count = 0;
+			while (count < 10)
 			{
+				count++;
 				_logger.Write("Server starting");
 				try
 				{
-					using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+					var endPoint = new IPEndPoint(IPAddress.Parse(_address), _port);
+					using var udpClient = new UdpClient();
+					udpClient.ExclusiveAddressUse = false;
+					var socket = udpClient.Client;
 					socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-					socket.Bind(new IPEndPoint(IPAddress.Parse(_address), _port));
+					socket.Bind(endPoint);
 
 					var buffer = new byte[BufSize];
 					EndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse(_allowedRemoteAddress), 0);
