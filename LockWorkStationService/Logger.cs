@@ -28,6 +28,11 @@ namespace LockWorkStationService
 			}
 		}
 
+		public static bool IsInstalled(string logname)
+		{
+			return EventLog.SourceExists(logname);
+		}
+
 		public void Write(string message, EventLogEntryType type = EventLogEntryType.Information)
 		{
 			_eventLog.WriteEntry(message, type);

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LockWorkStation", "LockWork
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{6D6D0FCA-3C56-4B86-91A5-C640C88E9183}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LockWorkStationServiceTests", "LockWorkStationServiceTests\LockWorkStationServiceTests.csproj", "{916DBB1F-0876-45A9-8B8F-D38D79294C2D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -29,6 +31,10 @@ Global
 		{6A4A0142-2D3B-455D-9E08-7B409F29E8FE}.Debug|x64.Build.0 = Debug|x64
 		{6A4A0142-2D3B-455D-9E08-7B409F29E8FE}.Release|x64.ActiveCfg = Release|x64
 		{6A4A0142-2D3B-455D-9E08-7B409F29E8FE}.Release|x64.Build.0 = Release|x64
+		{916DBB1F-0876-45A9-8B8F-D38D79294C2D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{916DBB1F-0876-45A9-8B8F-D38D79294C2D}.Debug|x64.Build.0 = Debug|Any CPU
+		{916DBB1F-0876-45A9-8B8F-D38D79294C2D}.Release|x64.ActiveCfg = Release|Any CPU
+		{916DBB1F-0876-45A9-8B8F-D38D79294C2D}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

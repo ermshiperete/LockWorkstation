@@ -9,14 +9,13 @@ namespace LockWorkStationService
 {
 	public sealed class UdpServer
 	{
-		private const    int     BufSize = 256;
-		private readonly string  _address;
-		private readonly int     _port;
-		private readonly string  _allowedRemoteAddress;
-		private          Thread  _serverThread;
-		private          Action  _action;
-		private          Logger  _logger;
-		private          bool    _started;
+		private readonly string _address;
+		private readonly int    _port;
+		private readonly string _allowedRemoteAddress;
+		private          Thread _serverThread;
+		private          Action _action;
+		private readonly Logger _logger;
+		private          bool   _started;
 
 		public UdpServer(string address, int port, string allowedRemoteAddress, Logger logger)
 		{
@@ -43,6 +42,63 @@ namespace LockWorkStationService
 			_serverThread.Abort();
 		}
 
+		internal static bool IsInSubnet(IPAddress address, string subnet)
+		{
+			var addressBytes = address.GetAddressBytes();
+			IPAddress subnetAddress;
+			var parts = subnet.Split('/');
+			if (parts.Length > 2)
+			{
+				// ReSharper disable once LocalizableElement
+				throw new ArgumentException($"Invalid subnet '{subnet}'", nameof(subnet));
+			}
+			else if (parts.Length > 1)
+			{
+				subnetAddress = IPAddress.Parse(parts[0]);
+				var subnetLength = int.Parse(parts[1]);
+				if (subnetLength > 32)
+					// ReSharper disable once LocalizableElement
+					throw new ArgumentException("Invalid subnet length", nameof(subnet));
+
+				var subnetBytes = subnetAddress.GetAddressBytes();
+				if (addressBytes.Length != subnetBytes.Length)
+					throw new ArgumentException("Lengths of IP address and subnet do not match");
+
+				for (var i = 0; i < subnetLength / 8; i++)
+				{
+					if (addressBytes[i] != subnetBytes[i])
+						return false;
+				}
+
+				if (subnetLength % 8 == 0)
+					return true;
+
+				var index = subnetLength / 8;
+				var mask = 0;
+				for (var i = 0; i < subnetLength % 8; i++)
+				{
+					mask |= 1 << (7 - i);
+				}
+
+				return (addressBytes[index] & mask) == (subnetBytes[index] & mask);
+			}
+			else
+			{
+				subnetAddress = IPAddress.Parse(subnet);
+				var subnetBytes = subnetAddress.GetAddressBytes();
+				if (addressBytes.Length != subnetBytes.Length)
+					throw new ArgumentException("Lengths of IP address and subnet do not match");
+
+				for (int i = 0; i < addressBytes.Length; i++)
+				{
+					if (addressBytes[i] != subnetBytes[i])
+						return false;
+				}
+
+				return true;
+			}
+		}
+
 		private void Receive()
 		{
 			var count = 0;
@@ -59,19 +115,19 @@ namespace LockWorkStationService
 					socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
 					socket.Bind(endPoint);
 
-					var buffer = new byte[BufSize];
-					EndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse(_allowedRemoteAddress), 0);
+					var remoteEndpoint = new IPEndPoint(IPAddress.Any, 0);
 					var responseOk = Encoding.ASCII.GetBytes("OK");
 					var responseFailed = Encoding.ASCII.GetBytes("FAILED");
 					var logEntryType = EventLogEntryType.Information;
 					_logger.Write("Server ready");
 					while (true)
 					{
-						var bytes = socket.ReceiveFrom(buffer, ref remoteEndpoint);
-						var data = Encoding.ASCII.GetString(buffer, 0, bytes);
+						var bytes = udpClient.Receive(ref remoteEndpoint);
+						var data = Encoding.ASCII.GetString(bytes);
 
-						_logger.Write($"RECV: {remoteEndpoint}: {bytes} byte: {data}", logEntryType);
-						var isOk = data == "lock" && ((IPEndPoint)remoteEndpoint).Address.Equals(IPAddress.Parse(_allowedRemoteAddress));
+						// ReSharper disable once StringLiteralTypo
+						_logger.Write($"RECV: {remoteEndpoint}: {bytes.Length} bytes: {data}", logEntryType);
+						var isOk = data == "lock" && IsInSubnet(remoteEndpoint.Address, _allowedRemoteAddress);
 						var responseString = isOk ? "OK" : "FAILED";
 
 						try
@@ -85,8 +141,10 @@ namespace LockWorkStationService
 							isOk = false;
 						}
 
+						// ReSharper disable once StringLiteralTypo
 						_logger.Write($"RECV: Result: {responseString}", logEntryType);
-						socket.SendTo(isOk ? responseOk : responseFailed, remoteEndpoint);
+						var bytesToSend = isOk ? responseOk : responseFailed;
+						udpClient.Send(bytesToSend, bytesToSend.Length, remoteEndpoint);
 					}
 				}
 				catch (ThreadAbortException)
