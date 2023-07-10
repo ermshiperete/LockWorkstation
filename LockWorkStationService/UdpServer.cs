@@ -9,13 +9,14 @@ namespace LockWorkStationService
 {
 	public sealed class UdpServer
 	{
-		private const int BufSize = 256;
-		private readonly string _address;
-		private readonly int _port;
-		private readonly string _allowedRemoteAddress;
-		private Thread _serverThread;
-		private Action _action;
-		private Logger _logger;
+		private const    int     BufSize = 256;
+		private readonly string  _address;
+		private readonly int     _port;
+		private readonly string  _allowedRemoteAddress;
+		private          Thread  _serverThread;
+		private          Action  _action;
+		private          Logger  _logger;
+		private          bool    _started;
 
 		public UdpServer(string address, int port, string allowedRemoteAddress, Logger logger)
 		{
@@ -23,10 +24,15 @@ namespace LockWorkStationService
 			_port = port;
 			_allowedRemoteAddress = allowedRemoteAddress;
 			_logger = logger;
+			_started = false;
 		}
-		
+
 		public void Start(Action action = null)
 		{
+			if (_started)
+				return;
+
+			_started = true;
 			_action = action;
 			_serverThread = new Thread(Receive);
 			_serverThread.Start();
@@ -81,6 +87,7 @@ namespace LockWorkStationService
 				catch (ThreadAbortException)
 				{
 					_logger.Write("Ending server");
+					return;
 				}
 				catch (SocketException ex)
 				{
