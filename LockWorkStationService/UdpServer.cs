@@ -52,7 +52,8 @@ namespace LockWorkStationService
 				// ReSharper disable once LocalizableElement
 				throw new ArgumentException($"Invalid subnet '{subnet}'", nameof(subnet));
 			}
-			else if (parts.Length > 1)
+
+			if (parts.Length > 1)
 			{
 				subnetAddress = IPAddress.Parse(parts[0]);
 				var subnetLength = int.Parse(parts[1]);
@@ -89,7 +90,7 @@ namespace LockWorkStationService
 				if (addressBytes.Length != subnetBytes.Length)
 					throw new ArgumentException("Lengths of IP address and subnet do not match");
 
-				for (int i = 0; i < addressBytes.Length; i++)
+				for (var i = 0; i < addressBytes.Length; i++)
 				{
 					if (addressBytes[i] != subnetBytes[i])
 						return false;

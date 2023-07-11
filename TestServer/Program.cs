@@ -16,7 +16,7 @@ namespace TestServer
 			if (!Logger.IsInstalled(logName))
 				Logger.Install(logName);
 			var logger = new Logger(logName);
-			var server =new UdpServer("0.0.0.0", 56431, "10.3.0.50/23", logger);
+			var server = new UdpServer("0.0.0.0", 56431, "10.3.0.50/23", logger);
 			server.Start();
 		}
 	}
